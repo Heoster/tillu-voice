@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indic Voice Hub — TTS & STT</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎙️</text></svg>">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #09090b; --bg2: #111113; --card: #18181b; --border: #27272a;
+      --accent: #6366f1; --accent2: #8b5cf6; --text: #fafafa;
+      --text2: #a1a1aa; --text3: #71717a; --green: #22c55e;
+      --red: #ef4444; --yellow: #eab308; --cyan: #06b6d4;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+    }
+    .header {
+      padding: 32px 20px 20px; text-align: center;
+      background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.1) 0%, transparent 60%);
+      border-bottom: 1px solid var(--border);
+    }
+    .header h1 { font-size: 28px; font-weight: 800; }
+    .header h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .header p { color: var(--text3); font-size: 13px; margin-top: 4px; }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 20px 60px; }
+
+    /* Panels */
+    .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 700px) { .panels { grid-template-columns: 1fr; } }
+    .panel {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 20px; display: flex; flex-direction: column; gap: 14px;
+    }
+    .panel-title {
+      font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;
+    }
+    .panel-title .icon { font-size: 20px; }
+
+    /* Form elements */
+    label { font-size: 12px; font-weight: 600; color: var(--text2); display: block; margin-bottom: 4px; }
+    select, textarea, input[type="text"] {
+      width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 14px; outline: none;
+      font-family: inherit; transition: border-color 0.2s;
+    }
+    select:focus, textarea:focus, input:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+    select { cursor: pointer; }
+
+    .row { display: flex; gap: 10px; align-items: flex-end; }
+    .row > * { flex: 1; }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 18px; border: none; border-radius: 8px; font-weight: 700;
+      font-size: 14px; cursor: pointer; transition: opacity 0.2s; display: flex;
+      align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+    .btn-danger { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .btn:hover:not(:disabled) { opacity: 0.85; }
+
+    /* Result areas */
+    .result-box {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; min-height: 60px; position: relative;
+    }
+    .result-box audio { width: 100%; }
+    .result-text { color: var(--text2); font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+    .result-placeholder { color: var(--text3); font-size: 13px; font-style: italic; }
+
+    /* Provider badge */
+    .provider {
+      display: inline-flex; align-items: center; gap: 4px; font-size: 11px;
+      font-weight: 700; padding: 3px 10px; border-radius: 6px; margin-top: 8px;
+    }
+    .provider.groq { background: rgba(234,179,8,0.12); color: var(--yellow); }
+    .provider.sarvam { background: rgba(99,102,241,0.12); color: var(--accent); }
+    .provider.elevenlabs { background: rgba(6,182,212,0.12); color: var(--cyan); }
+    .provider.cartesia { background: rgba(139,92,246,0.12); color: var(--accent2); }
+    .provider.hf { background: rgba(34,197,94,0.12); color: var(--green); }
+    .provider.error { background: rgba(239,68,68,0.1); color: var(--red); }
+
+    /* Recording indicator */
+    .rec-indicator {
+      display: none; align-items: center; gap: 8px; font-size: 13px; color: var(--red);
+      font-weight: 600; padding: 8px 0;
+    }
+    .rec-indicator.show { display: flex; }
+    .rec-dot {
+      width: 10px; height: 10px; background: var(--red); border-radius: 50%;
+      animation: pulse 1s ease infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* API Box */
+    .api-box {
+      margin-top: 28px; background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px;
+    }
+    .api-box h3 { font-size: 14px; font-weight: 700; color: var(--text2); margin-bottom: 12px; }
+    .api-code {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 14px; font-family: 'SF Mono','Fira Code',monospace; font-size: 11px;
+      color: var(--green); overflow-x: auto; margin-bottom: 8px; white-space: pre-wrap;
+      word-break: break-all; cursor: pointer;
+    }
+    .api-code:hover { border-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎙️ <span>Indic Voice Hub</span></h1>
+  <p>TTS + STT for 14 Indian Languages • Auto-select model • Smart fallback</p>
+</div>
+
+<div class="container">
+  <div class="panels">
+
+    <!-- ── TTS Panel ── -->
+    <div class="panel">
+      <div class="panel-title"><span class="icon">🔊</span> Text to Speech</div>
+
+      <div>
+        <label>Language</label>
+        <select id="ttsLang">
+          <option value="hi">Hindi</option>
+          <option value="bn">Bengali</option>
+          <option value="ta">Tamil</option>
+          <option value="te">Telugu</option>
+          <option value="ml">Malayalam</option>
+          <option value="kn">Kannada</option>
+          <option value="gu">Gujarati</option>
+          <option value="mr">Marathi</option>
+          <option value="pa">Punjabi</option>
+          <option value="or">Odia</option>
+          <option value="ur">Urdu</option>
+          <option value="as">Assamese</option>
+          <option value="ne">Nepali</option>
+          <option value="sa">Sanskrit</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Text</label>
+        <textarea id="ttsText" placeholder="Enter text in any Indian language...">नमस्ते, आप सब का स्वागत है। यह एक टेस्ट है।</textarea>
+      </div>
+
+      <button class="btn btn-primary" id="ttsBtn" onclick="generateTTS()">🔊 Generate Speech</button>
+
+      <div class="result-box" id="ttsResult">
+        <span class="result-placeholder">Audio will appear here...</span>
+      </div>
+    </div>
+
+    <!-- ── STT Panel ── -->
+    <div class="panel">
+      <div class="panel-title"><span class="icon">🎤</span> Speech to Text</div>
+
+      <div>
+        <label>Language</label>
+        <select id="sttLang">
+          <option value="hi">Hindi</option>
+          <option value="bn">Bengali</option>
+          <option value="ta">Tamil</option>
+          <option value="te">Telugu</option>
+          <option value="ml">Malayalam</option>
+          <option value="kn">Kannada</option>
+          <option value="gu">Gujarati</option>
+          <option value="mr">Marathi</option>
+          <option value="pa">Punjabi</option>
+          <option value="or">Odia</option>
+          <option value="ur">Urdu</option>
+          <option value="as">Assamese</option>
+          <option value="ne">Nepali</option>
+          <option value="sa">Sanskrit</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+
+      <div>
+        <button class="btn btn-primary" id="sttBtn" onclick="toggleRecording()">🎤 Start Recording</button>
+        <button class="btn btn-danger" id="sttStopBtn" onclick="stopRecording()" style="display:none">⬛ Stop & Transcribe</button>
+      </div>
+
+      <div class="rec-indicator" id="recIndicator">
+        <span class="rec-dot"></span> Recording... <span id="recTime">0s</span>
+      </div>
+
+      <div class="result-box" id="sttResult">
+        <span class="result-placeholder">Transcribed text will appear here...</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── API Examples ── -->
+  <div class="api-box">
+    <h3>📡 API Endpoints</h3>
+    <div class="api-code" onclick="copyEl(this)">curl -X POST "{{origin}}/api/tts" -H "Content-Type: application/json" -d '{"text":"नमस्ते दुनिया","lang":"hi"}' --output audio.mp3</div>
+    <div class="api-code" onclick="copyEl(this)">curl -X POST "{{origin}}/api/stt" -H "Content-Type: application/json" -d '{"audio":"BASE64_AUDIO","lang":"hi","contentType":"audio/webm"}'</div>
+    <div class="api-code" onclick="copyEl(this)">curl "{{origin}}/api/tts?text=hello&lang=en" --output audio.mp3</div>
+  </div>
+</div>
+
+<script>
+  const origin = location.origin;
+
+  // ── TTS ──
+  async function generateTTS() {
+    const btn = document.getElementById('ttsBtn');
+    const resultBox = document.getElementById('ttsResult');
+    const text = document.getElementById('ttsText').value.trim();
+    const lang = document.getElementById('ttsLang').value;
+
+    if (!text) return;
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating...';
+    resultBox.innerHTML = '<span class="result-placeholder">Loading audio...</span>';
+
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, lang }),
+      });
+
+      const provider = res.headers.get('X-Provider') || 'unknown';
+      const contentType = res.headers.get('Content-Type') || 'audio/mpeg';
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'TTS failed');
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      resultBox.innerHTML = `
+        <audio controls src="${url}" style="width:100%"></audio>
+        <div class="provider ${getProviderClass(provider)}">⚡ ${provider}</div>
+      `;
+    } catch (err) {
+      resultBox.innerHTML = `<div class="provider error">❌ ${err.message}</div>`;
+    }
+
+    btn.disabled = false;
+    btn.textContent = '🔊 Generate Speech';
+  }
+
+  // ── STT Recording ──
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let recTimer = null;
+  let recSeconds = 0;
+
+  async function toggleRecording() {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      transcribeAudio();
+    };
+
+    mediaRecorder.start();
+    recSeconds = 0;
+    document.getElementById('recIndicator').classList.add('show');
+    document.getElementById('sttBtn').style.display = 'none';
+    document.getElementById('sttStopBtn').style.display = 'flex';
+
+    recTimer = setInterval(() => {
+      recSeconds++;
+      document.getElementById('recTime').textContent = recSeconds + 's';
+    }, 1000);
+  }
+
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+    clearInterval(recTimer);
+    document.getElementById('recIndicator').classList.remove('show');
+    document.getElementById('sttBtn').style.display = 'flex';
+    document.getElementById('sttStopBtn').style.display = 'none';
+  }
+
+  async function transcribeAudio() {
+    const resultBox = document.getElementById('sttResult');
+    const lang = document.getElementById('sttLang').value;
+
+    resultBox.innerHTML = '<span class="result-placeholder">⏳ Transcribing...</span>';
+
+    try {
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result.split(',')[1];
+        try {
+          const res = await fetch('/api/stt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ audio: base64, lang, contentType: 'audio/webm' }),
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            resultBox.innerHTML = `
+              <div class="result-text">${escHtml(data.text)}</div>
+              <div class="provider ${getProviderClass(data.provider)}">⚡ ${data.provider}</div>
+            `;
+          } else {
+            throw new Error(data.error || 'STT failed');
+          }
+        } catch (err) {
+          resultBox.innerHTML = `<div class="provider error">❌ ${err.message}</div>`;
+        }
+      };
+      reader.readAsDataURL(blob);
+    } catch (err) {
+      resultBox.innerHTML = `<div class="provider error">❌ ${err.message}</div>`;
+    }
+  }
+
+  function getProviderClass(p) {
+    if (!p) return 'hf';
+    if (p.includes('groq')) return 'groq';
+    if (p.includes('sarvam')) return 'sarvam';
+    if (p.includes('eleven')) return 'elevenlabs';
+    if (p.includes('cartesia')) return 'cartesia';
+    return 'hf';
+  }
+
+  function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+  }
+
+  function copyEl(el) {
+    navigator.clipboard.writeText(el.textContent.replace(/\{\{origin\}\}/g, origin)).then(() => {
+      el.style.borderColor = 'var(--green)';
+      setTimeout(() => el.style.borderColor = '', 1000);
+    });
+  }
+
+  // Fix origin in API examples
+  document.querySelectorAll('.api-code').forEach(el => {
+    el.textContent = el.textContent.replace(/\{\{origin\}\}/g, origin);
+  });
+</script>
+</body>
+</html>
