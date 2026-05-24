@@ -206,9 +206,9 @@
   <!-- ── API Examples ── -->
   <div class="api-box">
     <h3>📡 API Endpoints</h3>
-    <div class="api-code" onclick="copyEl(this)">curl -X POST "{{origin}}/api/tts" -H "Content-Type: application/json" -d '{"text":"नमस्ते दुनिया","lang":"hi"}' --output audio.mp3</div>
-    <div class="api-code" onclick="copyEl(this)">curl -X POST "{{origin}}/api/stt" -H "Content-Type: application/json" -d '{"audio":"BASE64_AUDIO","lang":"hi","contentType":"audio/webm"}'</div>
-    <div class="api-code" onclick="copyEl(this)">curl "{{origin}}/api/tts?text=hello&lang=en" --output audio.mp3</div>
+    <div class="api-code" onclick="copyEl(this)">curl -X POST "{{origin}}/api/speak" -H "Content-Type: application/json" -d '{"text":"नमस्ते दुनिया","lang":"hi"}' --output audio.mp3</div>
+    <div class="api-code" onclick="copyEl(this)">curl -X POST "{{origin}}/api/listen" -H "Content-Type: application/json" -d '{"audio":"BASE64_AUDIO","lang":"hi","contentType":"audio/webm"}'</div>
+    <div class="api-code" onclick="copyEl(this)">curl "{{origin}}/api/speak?text=hello&lang=en" --output audio.mp3</div>
   </div>
 </div>
 
@@ -229,7 +229,7 @@
     resultBox.innerHTML = '<span class="result-placeholder">Loading audio...</span>';
 
     try {
-      const res = await fetch('/api/tts', {
+      const res = await fetch('/api/speak', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, lang }),
@@ -309,12 +309,11 @@
       reader.onload = async () => {
         const base64 = reader.result.split(',')[1];
         try {
-          const res = await fetch('/api/stt', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ audio: base64, lang, contentType: 'audio/webm' }),
+          const res = await fetch('/api/listen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ audio: base64, lang, contentType: 'audio/webm' }),
           });
-
           const data = await res.json();
 
           if (data.success) {
