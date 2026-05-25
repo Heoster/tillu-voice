@@ -113,7 +113,7 @@ export default async function handler(req, res) {
             sample_rate: 44100,
           },
           language: toCartesiaLang(lang),
-          generation_config: { speed: -0.5, volume: 1 },
+          generation_config: { speed: 0.8, volume: 1 },
         }),
       });
 
@@ -134,10 +134,23 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── 3. ElevenLabs — high-quality multilingual fallback ────────────────────
+  // ── 3. ElevenLabs — multilingual fallback ────────────────────────────────
   if (isKey(ELEVEN_KEY)) {
     try {
-      const voiceId = '21m00Tcm4TlvDq8ikWAM'; // Rachel — available on free tier
+      // Use the user's own first voice (always available on any plan)
+      // GET /v1/voices returns the account's voices; first one is always accessible
+      let voiceId = 'cgSgspJ2msm6clMCkdW9'; // "Jessica" — free tier default
+      try {
+        const vr = await fetchWithTimeout('https://api.elevenlabs.io/v1/voices', {
+          method: 'GET',
+          headers: { 'xi-api-key': ELEVEN_KEY },
+        });
+        if (vr.ok) {
+          const vdata = await vr.json();
+          if (vdata.voices?.length > 0) voiceId = vdata.voices[0].voice_id;
+        }
+      } catch { /* use default voiceId */ }
+
       const r = await fetchWithTimeout(
         `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
         {
@@ -213,15 +226,15 @@ function toSarvamLang(code) {
 }
 
 function getSarvamSpeaker(langCode) {
-  // Sarvam bulbul:v1 speaker per language
+  // Sarvam bulbul:v2 available speakers (meera removed)
   const map = {
-    'hi-IN': 'meera', 'bn-IN': 'meera', 'ta-IN': 'meera',
-    'te-IN': 'meera', 'ml-IN': 'meera', 'kn-IN': 'meera',
-    'gu-IN': 'meera', 'mr-IN': 'meera', 'pa-IN': 'meera',
-    'od-IN': 'meera', 'ur-IN': 'meera', 'as-IN': 'meera',
-    'ne-NP': 'meera', 'en-IN': 'meera',
+    'hi-IN': 'anushka', 'bn-IN': 'anushka', 'ta-IN': 'anushka',
+    'te-IN': 'anushka', 'ml-IN': 'anushka', 'kn-IN': 'anushka',
+    'gu-IN': 'anushka', 'mr-IN': 'anushka', 'pa-IN': 'anushka',
+    'od-IN': 'anushka', 'ur-IN': 'anushka', 'as-IN': 'anushka',
+    'ne-NP': 'anushka', 'en-IN': 'anushka',
   };
-  return map[langCode] || 'meera';
+  return map[langCode] || 'anushka';
 }
 
 function toCartesiaLang(code) {
