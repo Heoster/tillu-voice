@@ -1,22 +1,59 @@
-# Tillu-Voice
+# 🎙️ Indic Voice Hub
 
-Tillu-Voice is a unified, dead-simple voice API service. You give it text or audio, and it handles the messy reality of TTS, STT, translation, and voice intelligence across 14+ Indian languages. One API, zero provider lock-in, smart fallbacks.
+A production-ready, unified API for Text-to-Speech (TTS) and Speech-to-Text (STT) across 14+ Indian languages. It handles provider routing, smart fallbacks, and multi-step pipelines (Listen → Translate → Speak).
 
-## Features
-- **Unified API:** Simplified endpoints for listening, speaking, translating, and unified workflows.
-- **Auto-Selection:** Intelligent routing to the best provider for each language.
-- **Smart Fallback:** Health-based switching if a primary provider fails.
-- **Cost Optimizer:** Uses free tiers when no keys are configured.
-- **Vercel Ready:** Edge-fast deployment.
+## 🚀 Quick Start
 
-## API Endpoints
-- `/api/listen`: Unified STT.
-- `/api/speak`: Unified TTS.
-- `/api/translate`: Speech-to-Speech Translation.
-- `/api/unified`: The full magic pipeline.
+1. **Clone & Install:**
+   ```bash
+   npm install
+   ```
 
-## Getting Started
-1. Clone the repository.
-2. Install [Vercel CLI](https://vercel.com/cli).
-3. Deploy: `vercel`.
-4. Add your API keys via Vercel dashboard or CLI.
+2. **Configure Environment:**
+   Copy `.env.example` to `.env` and add your API keys.
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Run Locally:**
+   ```bash
+   npm start
+   ```
+   Open [http://localhost:3000](http://localhost:3000)
+
+4. **Deploy to Vercel:**
+   ```bash
+   vercel
+   ```
+
+## 🛠️ API Endpoints
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/api/speak` | `POST` | **TTS**: Text to Audio (Sarvam → Cartesia → ElevenLabs) |
+| `/api/listen` | `POST` | **STT**: Audio to Text (Groq Whisper → Sarvam) |
+| `/api/translate`| `POST` | **Translation**: Audio to Translated Text |
+| `/api/unified` | `POST` | **Pipeline**: Audio → Translated Text → Translated Audio |
+| `/api/health` | `GET` | **Health Check**: Monitoring endpoint |
+
+## ⚙️ Configuration (Environment Variables)
+
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `APP_URL` | Base URL of the application (required for `/api/unified`) | `http://localhost:3000` |
+| `CORS_ORIGIN` | Allowed origins for CORS (e.g., `https://yourdomain.com`) | `*` |
+| `SARVAM_API_KEY` | Key for Sarvam.ai (Primary for Indian languages) | - |
+| `GROQ_API_KEY` | Key for Groq.com (Fastest STT) | - |
+| `CARTESIA_API_KEY`| Key for Cartesia.ai (Sonic-3.5 TTS) | - |
+| `ELEVENLABS_API_KEY`| Key for ElevenLabs.io (High-quality fallback) | - |
+
+## 🔒 Production Readiness
+
+- **Security Headers:** Configured in `vercel.json` (HSTS, No-Sniff, CSP-ready).
+- **CORS Protection:** Restrict access via `CORS_ORIGIN`.
+- **Error Handling:** Structured JSON errors with provider-specific details.
+- **Timeouts:** Built-in fetch timeouts to prevent hanging serverless functions.
+- **Fallbacks:** Automatically tries next provider if the primary fails.
+
+## 📝 License
+MIT
