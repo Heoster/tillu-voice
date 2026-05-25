@@ -1,7 +1,12 @@
 {
   "version": 2,
-  "name": "indic-voice-hub",
   "framework": null,
+  "functions": {
+    "api/speak.js":     { "maxDuration": 30 },
+    "api/listen.js":    { "maxDuration": 30 },
+    "api/translate.js": { "maxDuration": 30 },
+    "api/health.js":    { "maxDuration": 10 }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)",     "destination": "/public/$1" }
@@ -11,9 +16,8 @@
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-XSS-Protection", "value": "1; mode=block" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        { "key": "X-Frame-Options",        "value": "DENY" },
+        { "key": "Referrer-Policy",        "value": "strict-origin-when-cross-origin" }
       ]
     },
     {
@@ -21,8 +25,8 @@
       "headers": [
         { "key": "Access-Control-Allow-Origin",  "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" },
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" },
+        { "key": "Cache-Control",                "value": "no-store" }
       ]
     }
   ]
