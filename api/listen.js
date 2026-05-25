@@ -94,7 +94,7 @@ export default async function handler(req, res) {
       const ext = contentTypeToExt(safeContentType);
       const form = new FormData();
       form.append('file', new Blob([audioBuffer], { type: safeContentType }), `audio.${ext}`);
-      form.append('model', 'saarika:v2');
+      form.append('model', 'saarika:v2.5');
       form.append('language_code', toSarvamLang(safeLang));
 
       const r = await fetchWithTimeout('https://api.sarvam.ai/speech-to-text', {
