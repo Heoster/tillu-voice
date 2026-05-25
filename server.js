@@ -139,12 +139,18 @@ const server = http.createServer(async (req, nodeRes) => {
 
   // ── API routes ─────────────────────────────────────────────────────────────
   if (pathname.startsWith('/api/')) {
-    const name        = pathname.replace('/api/', '').split('/')[0];
-    const handlerPath = path.join(__dirname, 'api', `${name}.js`);
+    // Support nested paths: /api/voice/speak → api/voice/speak.js
+    const apiPath   = pathname.slice(1);                          // "api/voice/speak"
+    const jsPath    = path.join(__dirname, `${apiPath}.js`);      // api/voice/speak.js
+    const indexPath = path.join(__dirname, apiPath, 'index.js');  // api/voice/speak/index.js (fallback)
 
-    if (!fs.existsSync(handlerPath)) {
+    const handlerPath = fs.existsSync(jsPath)    ? jsPath
+                      : fs.existsSync(indexPath) ? indexPath
+                      : null;
+
+    if (!handlerPath) {
       nodeRes.writeHead(404, { 'Content-Type': 'application/json' });
-      nodeRes.end(JSON.stringify({ error: `Unknown API route: /api/${name}` }));
+      nodeRes.end(JSON.stringify({ error: `Unknown API route: ${pathname}` }));
       return;
     }
 
@@ -172,7 +178,7 @@ const server = http.createServer(async (req, nodeRes) => {
       }
     }
 
-    console.log(`${method} /api/${name} → ${nodeRes.statusCode} (${Date.now() - start}ms)`);
+    console.log(`${method} ${pathname} → ${nodeRes.statusCode} (${Date.now() - start}ms)`);
     return;
   }
 
