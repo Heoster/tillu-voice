@@ -1,0 +1,15 @@
+# Vercel
+.vercel
+
+# Environment — never commit real keys
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db

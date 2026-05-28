@@ -2,15 +2,16 @@
   "version": 2,
   "framework": null,
   "functions": {
-    "api/speak.js":       { "maxDuration": 30 },
-    "api/listen.js":      { "maxDuration": 30 },
-    "api/translate.js":   { "maxDuration": 30 },
-    "api/health.js":      { "maxDuration": 10 },
-    "api/voice/speak.js": { "maxDuration": 30 }
+    "api/speak.js":     { "maxDuration": 30 },
+    "api/listen.js":    { "maxDuration": 30 },
+    "api/translate.js": { "maxDuration": 30 },
+    "api/unified.js":   { "maxDuration": 60 },
+    "api/health.js":    { "maxDuration": 10 }
   },
   "rewrites": [
-    { "source": "/",         "destination": "/public/index.html" },
-    { "source": "/((?!api/).*)", "destination": "/public/$1" }
+    { "source": "/api/voice/speak", "destination": "/api/speak" },
+    { "source": "/",                "destination": "/public/index.html" },
+    { "source": "/((?!api/).*)",    "destination": "/public/$1" }
   ],
   "headers": [
     {
