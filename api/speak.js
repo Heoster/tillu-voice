@@ -1,5 +1,6 @@
-// /api/speak.js — TTS  Sarvam → Cartesia sonic-3.5 → ElevenLabs
+// /api/speak.js — TTS  Sarvam Hindi → Cartesia Hindi → ElevenLabs Hindi
 // Production-hardened: input validation, timeouts, structured errors, CORS
+// Fallback chain locked to Hindi models for consistent Indic language support
 
 const MAX_TEXT_LENGTH = 4000; // chars — safe for all providers
 const FETCH_TIMEOUT_MS = 15000;
@@ -16,14 +17,13 @@ export default async function handler(req, res) {
   }
 
   // ── Parse input ───────────────────────────────────────────────────────────
-  let text, lang;
+  let text;
+  const lang = 'hi'; // Fixed to Hindi for consistent TTS fallback chain
 
   if (req.method === 'GET') {
     text = (req.query?.text || '').trim();
-    lang = (req.query?.lang || 'hi').trim();
   } else if (req.method === 'POST') {
     text = (req.body?.text || '').trim();
-    lang = (req.body?.lang || 'hi').trim();
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -35,9 +35,6 @@ export default async function handler(req, res) {
     return res.status(400).json({
       error: `Text too long. Maximum ${MAX_TEXT_LENGTH} characters, got ${text.length}.`,
     });
-  }
-  if (!/^[a-z]{2}$/.test(lang)) {
-    lang = 'hi'; // sanitise — fall back to Hindi
   }
 
   const SARVAM_KEY   = process.env.SARVAM_API_KEY;

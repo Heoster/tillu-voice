@@ -217,8 +217,8 @@ server.listen(PORT, () => {
 🎙️  Indic Voice Hub  →  http://localhost:${PORT}
 
   API
-  ├─ POST /api/speak      TTS  (Sarvam → Cartesia → ElevenLabs)
-  ├─ POST /api/listen     STT  (Groq Whisper → Sarvam)
+  ├─ POST /api/speak      TTS  (Sarvam Hindi → Cartesia Hindi → ElevenLabs Hindi)
+  ├─ POST /api/listen     STT  (Groq Whisper-large-v3 → Sarvam saarika:v2.5)
   └─ POST /api/translate  STT + translate  (Groq/Sarvam → Sarvam)
 
   Press Ctrl+C to stop.
